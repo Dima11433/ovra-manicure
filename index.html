@@ -1,0 +1,2112 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Авторский маникюр и кутюрный трикотаж</title>
+  
+  <script>
+    document.documentElement.classList.add('js');
+  </script>
+
+  <style>
+    /* ==========================================================================
+       1. FONTS & ROOT TOKENS
+       ========================================================================== */
+    @font-face {
+      font-family: 'Archivo';
+      src: url('https://fonts.gstatic.com/s/archivo/v25/k3kQo8UDI-1M0wlSfdnoLg.woff2') format('woff2');
+      font-weight: 100 900;
+      font-stretch: 62% 125%;
+      font-display: swap;
+    }
+
+    :root {
+      /* Scaling units set dynamically by JS */
+      --u: 1px;
+      --uw: 1px;
+
+      /* Color Tokens from OVRA brief + Manicure Haute Couture */
+      --sky-top: #E4D0EA;
+      --sky-mid: #EBDDEF;
+      --sky-bot: #F8F1F9;
+      --bezel: #EFE6F1;
+      --panel: #F4EEF6;
+      --panel2: #F3E9F4;
+      --ink: #26132A;
+      --muted: #6E5873;
+      --pill: #2D1833;
+      --line: #C9B6CF;
+      --marquee-type: #CDBFD3;
+      --avatar-ring: #EADDEE;
+
+      /* Blood Red & Lacquer accents requested by user */
+      --blood-red: #8A0303;
+      --blood-red-glow: rgba(138, 3, 3, 0.35);
+      --lacquer-black: #0E0D10;
+      --porcelain-white: #FFFFFF;
+      --rose-pink: #E8B6C8;
+
+      /* Gradients */
+      --collage-empty-card: linear-gradient(180deg, #8E6A99 0%, #D9C4E0 100%);
+      --marquee-card-base: linear-gradient(180deg, #BA8FC7 0%, #D8C0E1 55%, #E7D7EC 100%);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    html, body {
+      width: 100%;
+      min-height: 100%;
+      background: var(--bezel);
+      font-family: 'Archivo', system-ui, -apple-system, "Segoe UI", sans-serif;
+      color: var(--ink);
+      overflow-x: hidden;
+    }
+
+    /* Ambient 3D rose petals canvas fixed in background */
+    #ambient-3d-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    /* Hidden until animated rule */
+    html.js .hidden-until-animated {
+      opacity: 0;
+    }
+
+    /* ==========================================================================
+       2. SECTION ARCHITECTURE (1440x956 scaling frame)
+       ========================================================================== */
+    .section {
+      width: 100%;
+      height: calc(956 * var(--u));
+      position: relative;
+    }
+
+    .hero-section, .collage-section {
+      padding-top: calc(16 * var(--u));
+    }
+
+    .marquee-section {
+      padding-top: calc(16 * var(--u));
+      padding-bottom: calc(16 * var(--u));
+    }
+
+    .panel {
+      margin: 0 calc(16 * var(--u));
+      height: calc(924 * var(--u));
+      border-radius: calc(36 * var(--u));
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* ==========================================================================
+       3. HERO SECTION (ФОН 1: БЕЛЫЙ)
+       ========================================================================== */
+    .hero-panel {
+      background: linear-gradient(180deg, #FFFFFF 0%, #FAF5F9 50%, #F5ECF5 100%);
+      transition: background 0.5s ease;
+    }
+
+    /* Theme Switcher Bar */
+    .theme-palette-bar {
+      position: absolute;
+      top: calc(20 * var(--u));
+      right: calc(40 * var(--uw));
+      display: flex;
+      align-items: center;
+      gap: calc(8 * var(--u));
+      z-index: 50;
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      padding: calc(6 * var(--u)) calc(12 * var(--u));
+      border-radius: 9999px;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+    }
+
+    .palette-title {
+      font-size: calc(11 * var(--u));
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      margin-right: calc(4 * var(--u));
+    }
+
+    .palette-btn {
+      border: 1px solid transparent;
+      background: transparent;
+      font-family: inherit;
+      font-size: calc(11.5 * var(--u));
+      font-weight: 600;
+      color: var(--ink);
+      padding: calc(4 * var(--u)) calc(10 * var(--u));
+      border-radius: 9999px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      white-space: nowrap;
+    }
+
+    .palette-btn:hover {
+      background: rgba(0, 0, 0, 0.05);
+      transform: translateY(-1px);
+    }
+
+    .palette-btn.active {
+      background: var(--pill);
+      color: #FFFFFF;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Floral Accent in Hero */
+    .hero-floral-accent {
+      position: absolute;
+      right: calc(42 * var(--uw));
+      bottom: calc(36 * var(--u));
+      width: calc(240 * var(--u));
+      height: calc(160 * var(--u));
+      border-radius: calc(18 * var(--u));
+      overflow: hidden;
+      z-index: 4;
+      box-shadow: 0 12px 32px rgba(90, 0, 10, 0.16);
+      border: calc(2 * var(--u)) solid rgba(255, 255, 255, 0.8);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      cursor: pointer;
+    }
+
+    .hero-floral-accent:hover {
+      transform: translateY(-4px) scale(1.02);
+      box-shadow: 0 18px 40px rgba(138, 3, 3, 0.28);
+    }
+
+    .hero-floral-accent img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .floral-caption {
+      position: absolute;
+      bottom: calc(10 * var(--u));
+      left: calc(12 * var(--u));
+      background: rgba(20, 8, 14, 0.72);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      color: #FFFFFF;
+      font-size: calc(10 * var(--u));
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      padding: calc(3 * var(--u)) calc(8 * var(--u));
+      border-radius: 9999px;
+      text-transform: uppercase;
+    }
+
+    /* Notch */
+    .notch-wrapper {
+      position: absolute;
+      top: -1px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: calc(560 * var(--u));
+      height: calc(61 * var(--u));
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .notch-svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .notch-logo {
+      position: absolute;
+      top: calc(10 * var(--u));
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: calc(33 * var(--u));
+      font-weight: 380;
+      font-stretch: 122%;
+      letter-spacing: 0.2em;
+      padding-left: 0.2em;
+      line-height: 1;
+      color: var(--ink);
+      white-space: nowrap;
+      pointer-events: auto;
+    }
+
+    /* Navs */
+    .hero-nav-left {
+      position: absolute;
+      top: calc(33 * var(--u));
+      left: calc(40 * var(--uw));
+      display: flex;
+      align-items: center;
+      gap: calc(30 * var(--u));
+      z-index: 10;
+    }
+
+    .hero-nav-left a, .hero-nav-right a {
+      font-size: calc(13.5 * var(--u));
+      font-weight: 470;
+      letter-spacing: -0.01em;
+      color: var(--ink);
+      text-decoration: none;
+      transition: color 0.2s ease, transform 0.2s ease;
+      cursor: pointer;
+    }
+
+    .hero-nav-left a:hover, .hero-nav-right a:hover {
+      color: var(--blood-red);
+      transform: translateY(-1px);
+    }
+
+    .hero-nav-right {
+      position: absolute;
+      top: calc(17 * var(--u));
+      right: calc(41 * var(--uw));
+      display: flex;
+      align-items: center;
+      gap: calc(31 * var(--u));
+      z-index: 10;
+    }
+
+    .pill-btn {
+      height: calc(44 * var(--u));
+      padding: 0 calc(22 * var(--u));
+      border-radius: 9999px;
+      border: none;
+      font-family: inherit;
+      font-size: calc(13.5 * var(--u));
+      font-weight: 470;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      white-space: pre;
+      transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    .sign-in-pill {
+      background: var(--pill);
+      color: #FFFFFF;
+      margin-right: calc(-27 * var(--u));
+    }
+
+    .sign-in-pill:hover {
+      background: var(--blood-red);
+      box-shadow: 0 4px 16px var(--blood-red-glow);
+    }
+
+    .lock-btn {
+      width: calc(44 * var(--u));
+      height: calc(44 * var(--u));
+      border-radius: 50%;
+      background: var(--pill);
+      border: calc(2 * var(--u)) solid var(--sky-top);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .lock-btn:hover {
+      background: var(--blood-red);
+      transform: rotate(6deg) scale(1.05);
+    }
+
+    /* Rays SVG */
+    .hero-rays {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .hero-rays line {
+      stroke: #FFFFFF;
+      stroke-opacity: 0.75;
+      stroke-width: 1.1px;
+      vector-effect: non-scaling-stroke;
+    }
+
+    /* Athlete / Model Wrapper (z-index 2) */
+    .athlete-wrapper {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 2;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .athlete-img {
+      position: absolute;
+      left: 50%;
+      margin-left: calc(-420 * var(--u));
+      top: calc(75 * var(--u));
+      width: calc(840 * var(--u));
+      height: auto;
+      transform-origin: 50% 0;
+      transform: translateY(0);
+      display: block;
+      will-change: transform, -webkit-mask-image;
+    }
+
+    /* Headline (z-index 4) */
+    .hero-headline {
+      position: absolute;
+      top: calc(120 * var(--u));
+      left: 0;
+      width: 100%;
+      text-align: center;
+      font-size: calc(64.5 * var(--u));
+      line-height: 0.93;
+      font-weight: 760;
+      letter-spacing: -0.035em;
+      text-transform: uppercase;
+      color: var(--ink);
+      z-index: 4;
+      pointer-events: none;
+    }
+
+    .headline-line {
+      display: block;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    .hero-headline .char-span {
+      display: inline-block;
+      will-change: clip-path, opacity, transform;
+    }
+
+    .hero-headline .workout-stencil {
+      font-weight: 360;
+      letter-spacing: -0.01em;
+    }
+
+    /* CTAs */
+    .hero-ctas {
+      position: absolute;
+      top: calc(270 * var(--u));
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: calc(8 * var(--u));
+      z-index: 4;
+    }
+
+    .cta-pill {
+      height: calc(44 * var(--u));
+      padding: 0 calc(21 * var(--u));
+      border-radius: 9999px;
+      border: none;
+      font-family: inherit;
+      font-size: calc(13.5 * var(--u));
+      font-weight: 470;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    .cta-pill.dark-pill {
+      background: var(--pill);
+      color: #FFFFFF;
+      box-shadow: 0 4px 12px rgba(45, 24, 51, 0.2);
+    }
+
+    .cta-pill.dark-pill:hover {
+      background: var(--blood-red);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px var(--blood-red-glow);
+    }
+
+    .cta-pill.white-pill {
+      background: #FFFFFF;
+      color: var(--ink);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+
+    .cta-pill.white-pill:hover {
+      background: #FDF9FD;
+      color: var(--blood-red);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.09);
+    }
+
+    /* Avatars */
+    .hero-avatars {
+      position: absolute;
+      left: calc(40 * var(--uw));
+      top: calc(578 * var(--u));
+      display: flex;
+      z-index: 4;
+    }
+
+    .avatar {
+      width: calc(45 * var(--u));
+      height: calc(45 * var(--u));
+      border-radius: 50%;
+      border: calc(2 * var(--u)) solid var(--avatar-ring);
+      margin-right: calc(-13 * var(--u));
+      background-color: #CDB4D6;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+      transition: transform 0.2s ease, z-index 0.2s ease;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .avatar:hover {
+      transform: scale(1.15) translateY(-2px);
+      z-index: 10;
+    }
+
+    /* Body copy */
+    .hero-copy {
+      position: absolute;
+      left: calc(40 * var(--uw));
+      top: calc(668 * var(--u));
+      width: calc(262 * var(--u));
+      font-size: calc(14.2 * var(--u));
+      line-height: 1.52;
+      color: var(--muted);
+      letter-spacing: -0.01em;
+      text-indent: calc(51 * var(--u));
+      z-index: 4;
+    }
+
+    /* Video / Roses Card */
+    .hero-video-card {
+      position: absolute;
+      right: calc(42 * var(--uw));
+      top: calc(617 * var(--u));
+      width: calc(280 * var(--u));
+      height: calc(187 * var(--u));
+      border-radius: calc(16 * var(--u));
+      overflow: hidden;
+      z-index: 4;
+      background-color: #CDB4D6;
+      box-shadow: 0 12px 32px rgba(45, 24, 51, 0.15);
+      cursor: pointer;
+      transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s ease;
+    }
+
+    .hero-video-card:hover {
+      transform: translateY(-4px) scale(1.02);
+      box-shadow: 0 18px 40px rgba(138, 3, 3, 0.25);
+    }
+
+    .play-btn {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: calc(48 * var(--u));
+      height: calc(48 * var(--u));
+      border-radius: 50%;
+      background: rgba(45, 24, 51, 0.72);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s ease, transform 0.2s ease;
+    }
+
+    .hero-video-card:hover .play-btn {
+      background: rgba(138, 3, 3, 0.85);
+      transform: translate(-50%, -50%) scale(1.08);
+    }
+
+    .play-btn svg {
+      margin-left: calc(2 * var(--u));
+      width: calc(14 * var(--u));
+      height: calc(14 * var(--u));
+    }
+
+    .video-card-tag {
+      position: absolute;
+      bottom: calc(12 * var(--u));
+      left: calc(14 * var(--u));
+      background: rgba(38, 19, 42, 0.65);
+      backdrop-filter: blur(4px);
+      color: #F8F1F9;
+      font-size: calc(10.5 * var(--u));
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      padding: calc(3 * var(--u)) calc(8 * var(--u));
+      border-radius: 9999px;
+      text-transform: uppercase;
+    }
+
+    /* ==========================================================================
+       4. COLLAGE SECTION (ФОН 2: КРОВАВО-КРАСНЫЙ)
+       ========================================================================== */
+    .collage-panel {
+      background: linear-gradient(180deg, #3D0005 0%, #8A0303 40%, #520007 100%);
+      transition: background 0.5s ease;
+    }
+
+    .collage-panel .outlined-word {
+      -webkit-text-stroke: calc(1.6 * var(--u)) rgba(255, 255, 255, 0.45);
+    }
+
+    .collage-panel .collage-p {
+      color: #FFE6EE;
+    }
+
+    .collage-frame {
+      width: calc(1408 * var(--u));
+      height: 100%;
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      top: 0;
+    }
+
+    .collage-card {
+      position: absolute;
+      overflow: hidden;
+      background-color: #CDB4D6;
+      box-shadow: 0 10px 28px rgba(45, 24, 51, 0.12);
+      transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.35s ease;
+      cursor: pointer;
+    }
+
+    .collage-card:hover {
+      transform: translateY(-4px) scale(1.015);
+      box-shadow: 0 18px 36px rgba(45, 24, 51, 0.2);
+    }
+
+    .left-card {
+      left: calc(80 * var(--u));
+      top: calc(135 * var(--u));
+      width: calc(218 * var(--u));
+      height: calc(287 * var(--u));
+      border-radius: calc(14 * var(--u));
+      z-index: 1;
+    }
+
+    .right-card {
+      left: calc(1079 * var(--u));
+      top: calc(395 * var(--u));
+      width: calc(212 * var(--u));
+      height: calc(281 * var(--u));
+      border-radius: calc(14 * var(--u));
+      z-index: 1;
+    }
+
+    .centre-card {
+      left: calc(514 * var(--u));
+      top: calc(135 * var(--u));
+      width: calc(380 * var(--u));
+      height: calc(534 * var(--u));
+      border-radius: calc(24 * var(--u));
+      z-index: 3;
+    }
+
+    .centre-empty-gradient {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--collage-empty-card);
+      z-index: 1;
+    }
+
+    .centre-photo-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 2;
+      opacity: 0;
+      background-color: #CDB4D6;
+    }
+
+    /* Outlined Word МАНИКЮР (layer 2) */
+    .outlined-word {
+      position: absolute;
+      left: calc(12 * var(--u));
+      top: calc(305 * var(--u));
+      font-size: calc(287 * var(--u));
+      font-weight: 300;
+      font-stretch: 100%;
+      line-height: 1;
+      color: transparent;
+      -webkit-text-stroke: calc(1.6 * var(--u)) var(--line);
+      white-space: nowrap;
+      z-index: 2;
+      pointer-events: none;
+      text-transform: uppercase;
+      letter-spacing: 0;
+    }
+
+    .collage-p {
+      position: absolute;
+      font-size: calc(14 * var(--u));
+      line-height: 1.43;
+      color: var(--muted);
+      letter-spacing: -0.01em;
+      z-index: 4;
+    }
+
+    .top-right {
+      left: calc(1058 * var(--u));
+      top: calc(122 * var(--u));
+      width: calc(250 * var(--u));
+    }
+
+    .bottom-left {
+      left: calc(80 * var(--u));
+      top: calc(665 * var(--u));
+      width: calc(205 * var(--u));
+    }
+
+    .card-label {
+      position: absolute;
+      bottom: calc(14 * var(--u));
+      left: calc(14 * var(--u));
+      background: rgba(38, 19, 42, 0.7);
+      backdrop-filter: blur(5px);
+      color: #FFFFFF;
+      font-size: calc(11 * var(--u));
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      padding: calc(3 * var(--u)) calc(9 * var(--u));
+      border-radius: 9999px;
+      text-transform: uppercase;
+      pointer-events: none;
+    }
+
+    /* ==========================================================================
+       5. FRESH FITS / MARQUEE SECTION (ФОН 3: ЧЕРНЫЙ)
+       ========================================================================== */
+    .marquee-panel {
+      background: linear-gradient(180deg, #09070B 0%, #150E18 45%, #050406 100%);
+      transition: background 0.5s ease;
+    }
+
+    .marquee-row {
+      display: none !important;
+    }
+
+    /* THEME OVERRIDES */
+    body.theme-black .hero-panel,
+    body.theme-black .collage-panel,
+    body.theme-black .marquee-panel {
+      background: linear-gradient(180deg, #08060A 0%, #160E18 45%, #050306 100%) !important;
+    }
+    body.theme-black .hero-headline,
+    body.theme-black .collage-p,
+    body.theme-black .hero-copy {
+      color: #FFFFFF !important;
+    }
+    body.theme-black .outlined-word {
+      -webkit-text-stroke-color: rgba(255, 255, 255, 0.35) !important;
+    }
+
+    body.theme-blood .hero-panel,
+    body.theme-blood .collage-panel,
+    body.theme-blood .marquee-panel {
+      background: linear-gradient(180deg, #3D0005 0%, #8A0303 40%, #520007 100%) !important;
+    }
+    body.theme-blood .hero-headline,
+    body.theme-blood .collage-p,
+    body.theme-blood .hero-copy {
+      color: #FFFFFF !important;
+    }
+    body.theme-blood .outlined-word {
+      -webkit-text-stroke-color: rgba(255, 255, 255, 0.45) !important;
+    }
+
+    body.theme-white .hero-panel,
+    body.theme-white .collage-panel,
+    body.theme-white .marquee-panel {
+      background: linear-gradient(180deg, #FFFFFF 0%, #FAF5F9 50%, #F5ECF5 100%) !important;
+    }
+    body.theme-white .hero-headline {
+      color: var(--ink) !important;
+    }
+    body.theme-white .collage-p,
+    body.theme-white .hero-copy {
+      color: var(--muted) !important;
+    }
+    body.theme-white .outlined-word {
+      -webkit-text-stroke-color: var(--line) !important;
+    }
+
+    .marquee-row.row-1 {
+      top: calc(146 * var(--u));
+    }
+
+    .marquee-row.row-2 {
+      top: calc(646 * var(--u));
+    }
+
+    .marquee-row .spacer {
+      display: inline-block;
+      width: 0.45em;
+    }
+
+    /* Marquee Card */
+    .marquee-card {
+      position: absolute;
+      top: calc(73 * var(--u));
+      left: 50%;
+      transform: translateX(-50%);
+      width: calc(503 * var(--u));
+      height: calc(699 * var(--u));
+      border-radius: calc(24 * var(--u));
+      overflow: hidden;
+      z-index: 2;
+      background: var(--marquee-card-base);
+      box-shadow: 0 16px 44px rgba(45, 24, 51, 0.18);
+    }
+
+    .marquee-look {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #CDB4D6;
+      opacity: 0;
+      will-change: opacity, -webkit-mask-image;
+    }
+
+    .marquee-look.active-look {
+      opacity: 1;
+    }
+
+    .card-arch {
+      position: absolute;
+      top: calc(16 * var(--u));
+      left: calc(16 * var(--u));
+      right: calc(16 * var(--u));
+      height: calc(360 * var(--u));
+      border-top-left-radius: calc(235 * var(--u));
+      border-top-right-radius: calc(235 * var(--u));
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.1) 60%, transparent 100%);
+      z-index: 3;
+      pointer-events: none;
+    }
+
+    .look-floating-badge {
+      position: absolute;
+      bottom: calc(22 * var(--u));
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(38, 19, 42, 0.75);
+      backdrop-filter: blur(8px);
+      padding: calc(6 * var(--u)) calc(18 * var(--u));
+      border-radius: 9999px;
+      color: #FFFFFF;
+      font-size: calc(12.5 * var(--u));
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      z-index: 4;
+      white-space: nowrap;
+    }
+
+    /* ==========================================================================
+       6. STENCIL LETTER CUTS (CSS Masks)
+       ========================================================================== */
+    .stencil-letter {
+      display: inline-block;
+      position: relative;
+    }
+
+    /* Vertical cuts (90deg) */
+    .cut-v-50 {
+      -webkit-mask-image: linear-gradient(90deg, #000 calc(50% - 0.034em), transparent calc(50% - 0.034em), transparent calc(50% + 0.034em), #000 calc(50% + 0.034em));
+      mask-image: linear-gradient(90deg, #000 calc(50% - 0.034em), transparent calc(50% - 0.034em), transparent calc(50% + 0.034em), #000 calc(50% + 0.034em));
+    }
+    .cut-v-29 {
+      -webkit-mask-image: linear-gradient(90deg, #000 calc(29% - 0.034em), transparent calc(29% - 0.034em), transparent calc(29% + 0.034em), #000 calc(29% + 0.034em));
+      mask-image: linear-gradient(90deg, #000 calc(29% - 0.034em), transparent calc(29% - 0.034em), transparent calc(29% + 0.034em), #000 calc(29% + 0.034em));
+    }
+    .cut-v-27 {
+      -webkit-mask-image: linear-gradient(90deg, #000 calc(27% - 0.034em), transparent calc(27% - 0.034em), transparent calc(27% + 0.034em), #000 calc(27% + 0.034em));
+      mask-image: linear-gradient(90deg, #000 calc(27% - 0.034em), transparent calc(27% - 0.034em), transparent calc(27% + 0.034em), #000 calc(27% + 0.034em));
+    }
+
+    /* Horizontal cuts (180deg) */
+    .cut-h-21 {
+      -webkit-mask-image: linear-gradient(180deg, #000 calc(21% - 0.034em), transparent calc(21% - 0.034em), transparent calc(21% + 0.034em), #000 calc(21% + 0.034em));
+      mask-image: linear-gradient(180deg, #000 calc(21% - 0.034em), transparent calc(21% - 0.034em), transparent calc(21% + 0.034em), #000 calc(21% + 0.034em));
+    }
+    .cut-h-50 {
+      -webkit-mask-image: linear-gradient(180deg, #000 calc(50% - 0.034em), transparent calc(50% - 0.034em), transparent calc(50% + 0.034em), #000 calc(50% + 0.034em));
+      mask-image: linear-gradient(180deg, #000 calc(50% - 0.034em), transparent calc(50% - 0.034em), transparent calc(50% + 0.034em), #000 calc(50% + 0.034em));
+    }
+    .cut-h-52 {
+      -webkit-mask-image: linear-gradient(180deg, #000 calc(52% - 0.034em), transparent calc(52% - 0.034em), transparent calc(52% + 0.034em), #000 calc(52% + 0.034em));
+      mask-image: linear-gradient(180deg, #000 calc(52% - 0.034em), transparent calc(52% - 0.034em), transparent calc(52% + 0.034em), #000 calc(52% + 0.034em));
+    }
+    .cut-h-62 {
+      -webkit-mask-image: linear-gradient(180deg, #000 calc(62% - 0.034em), transparent calc(62% - 0.034em), transparent calc(62% + 0.034em), #000 calc(62% + 0.034em));
+      mask-image: linear-gradient(180deg, #000 calc(62% - 0.034em), transparent calc(62% - 0.034em), transparent calc(62% + 0.034em), #000 calc(62% + 0.034em));
+    }
+
+    /* ==========================================================================
+       7. PHONE RESPONSIVE LAYOUT (below 821px)
+       ========================================================================== */
+    @media (max-width: 820px) {
+      .section {
+        height: auto;
+      }
+
+      .panel {
+        margin: 0 calc(8 * var(--u));
+        border-radius: calc(24 * var(--u));
+      }
+
+      /* Hero Phone */
+      .hero-section {
+        height: max(calc(820 * var(--u)), 100svh);
+        padding-top: calc(8 * var(--u));
+      }
+
+      .hero-panel {
+        height: 100%;
+      }
+
+      .notch-wrapper {
+        width: calc(200 * var(--u));
+        height: calc(34 * var(--u));
+      }
+
+      .notch-logo {
+        top: calc(6 * var(--u));
+        font-size: calc(19 * var(--u));
+      }
+
+      .hero-nav-left {
+        top: calc(20 * var(--u));
+        left: calc(16 * var(--u));
+        gap: calc(14 * var(--u));
+      }
+
+      .hero-nav-left a {
+        font-size: calc(11 * var(--u));
+      }
+
+      .hero-nav-left a:nth-child(n+3) {
+        display: none;
+      }
+
+      .hero-nav-right {
+        top: calc(8 * var(--u));
+        right: calc(10 * var(--u));
+        gap: 0;
+      }
+
+      .hero-nav-right a, .hero-nav-right .sign-in-pill {
+        display: none;
+      }
+
+      .lock-btn {
+        width: calc(34 * var(--u));
+        height: calc(34 * var(--u));
+      }
+
+      .lock-btn svg {
+        width: calc(13 * var(--u));
+        height: calc(13 * var(--u));
+      }
+
+      .hero-headline {
+        top: calc(70 * var(--u));
+        font-size: calc(28.5 * var(--u));
+      }
+
+      .hero-ctas {
+        top: calc(148 * var(--u));
+      }
+
+      .cta-pill {
+        height: calc(38 * var(--u));
+        font-size: calc(11.5 * var(--u));
+        padding: 0 calc(16 * var(--u));
+      }
+
+      .athlete-img {
+        top: calc(85 * var(--u));
+        width: calc(480 * var(--u));
+        margin-left: calc(-240 * var(--u));
+      }
+
+      .hero-avatars {
+        left: calc(14 * var(--u));
+        bottom: calc(150 * var(--u));
+        top: auto;
+      }
+
+      .avatar {
+        width: calc(34 * var(--u));
+        height: calc(34 * var(--u));
+        margin-right: calc(-10 * var(--u));
+      }
+
+      .theme-palette-bar {
+        top: calc(12 * var(--u));
+        right: calc(12 * var(--u));
+        padding: calc(4 * var(--u)) calc(8 * var(--u));
+        gap: calc(4 * var(--u));
+      }
+
+      .palette-title {
+        font-size: calc(9.5 * var(--u));
+      }
+
+      .palette-btn {
+        font-size: calc(10 * var(--u));
+        padding: calc(3 * var(--u)) calc(6 * var(--u));
+      }
+
+      .hero-floral-accent {
+        right: calc(12 * var(--u));
+        bottom: calc(16 * var(--u));
+        width: calc(130 * var(--u));
+        height: calc(88 * var(--u));
+        border-radius: calc(12 * var(--u));
+      }
+
+      .floral-caption {
+        font-size: calc(8 * var(--u));
+        padding: calc(2 * var(--u)) calc(6 * var(--u));
+      }
+
+      .hero-copy {
+        display: none;
+      }
+
+      .hero-video-card {
+        right: calc(12 * var(--u));
+        bottom: calc(16 * var(--u));
+        top: auto;
+        width: calc(128 * var(--u));
+        height: calc(86 * var(--u));
+        border-radius: calc(12 * var(--u));
+      }
+
+      .play-btn {
+        width: calc(32 * var(--u));
+        height: calc(32 * var(--u));
+      }
+
+      .play-btn svg {
+        width: calc(10 * var(--u));
+        height: calc(10 * var(--u));
+      }
+
+      .video-card-tag {
+        display: none;
+      }
+
+      /* Collage Phone */
+      .collage-section {
+        height: calc(760 * var(--u));
+        padding-top: calc(8 * var(--u));
+      }
+
+      .collage-panel {
+        height: calc(744 * var(--u));
+      }
+
+      .collage-frame {
+        width: 100%;
+        left: 0;
+        transform: none;
+      }
+
+      .top-right {
+        left: calc(16 * var(--u));
+        top: calc(28 * var(--u));
+        width: calc(300 * var(--u));
+        font-size: calc(13 * var(--u));
+      }
+
+      .left-card {
+        left: calc(14 * var(--u));
+        top: calc(150 * var(--u));
+        width: calc(108 * var(--u));
+        height: calc(164 * var(--u));
+        border-radius: calc(12 * var(--u));
+      }
+
+      .centre-card {
+        left: calc(130 * var(--u));
+        top: calc(190 * var(--u));
+        width: calc(230 * var(--u));
+        height: calc(324 * var(--u));
+        border-radius: calc(18 * var(--u));
+      }
+
+      .right-card {
+        left: calc(24 * var(--u));
+        top: calc(500 * var(--u));
+        width: calc(126 * var(--u));
+        height: calc(168 * var(--u));
+        border-radius: calc(12 * var(--u));
+      }
+
+      .outlined-word {
+        left: calc(8 * var(--u));
+        top: calc(318 * var(--u));
+        font-size: calc(80 * var(--u));
+        -webkit-text-stroke-width: 1px;
+      }
+
+      .bottom-left {
+        left: calc(172 * var(--u));
+        top: calc(560 * var(--u));
+        width: calc(180 * var(--u));
+        font-size: calc(13 * var(--u));
+      }
+
+      /* Marquee Phone */
+      .marquee-section {
+        height: calc(676 * var(--u));
+        padding: calc(8 * var(--u)) 0;
+      }
+
+      .marquee-panel {
+        height: calc(660 * var(--u));
+      }
+
+      .marquee-row {
+        font-size: calc(76 * var(--u));
+      }
+
+      .marquee-row.row-1 {
+        top: calc(22 * var(--u));
+      }
+
+      .marquee-row.row-2 {
+        top: calc(552 * var(--u));
+      }
+
+      .marquee-card {
+        top: calc(118 * var(--u));
+        width: calc(300 * var(--u));
+        height: calc(417 * var(--u));
+        border-radius: calc(18 * var(--u));
+      }
+
+      .card-arch {
+        border-top-left-radius: calc(140 * var(--u));
+        border-top-right-radius: calc(140 * var(--u));
+      }
+    }
+
+    /* Accessibility: Reduced Motion */
+    @media (prefers-reduced-motion: reduce) {
+      .hidden-until-animated {
+        opacity: 1 !important;
+      }
+      .athlete-img {
+        transform: translateY(0) !important;
+        -webkit-mask-image: none !important;
+        mask-image: none !important;
+      }
+      .centre-photo-layer {
+        opacity: 1 !important;
+        -webkit-mask-image: none !important;
+        mask-image: none !important;
+      }
+      .char-span {
+        clip-path: none !important;
+        opacity: 1 !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Ambient 3D Rose Petal Canvas (WebGL) -->
+  <canvas id="ambient-3d-canvas"></canvas>
+
+  <!-- ========================================================================
+       SECTION 1: HERO
+       ======================================================================== -->
+  <section class="section hero-section" id="hero">
+    <div class="panel hero-panel">
+
+      <!-- Trapezoid Notch (logo removed) -->
+      <div class="notch-wrapper" style="display: none;">
+        <svg class="notch-svg" viewBox="0 0 560 61" preserveAspectRatio="none">
+          <path d="M0 0 C34 0 46 6 60 22 L78 44 C88 56 98 61 116 61 L444 61 C462 61 472 56 482 44 L500 22 C514 6 526 0 560 0 Z" fill="#EFE6F1" />
+        </svg>
+      </div>
+
+      <!-- Rays SVG (6 lines meeting at 704,610) -->
+      <svg class="hero-rays hidden-until-animated" viewBox="0 0 1408 924" preserveAspectRatio="none">
+        <line x1="704" y1="610" x2="0" y2="300" />
+        <line x1="704" y1="610" x2="0" y2="470" />
+        <line x1="704" y1="610" x2="90" y2="924" />
+        <line x1="704" y1="610" x2="1408" y2="300" />
+        <line x1="704" y1="610" x2="1408" y2="470" />
+        <line x1="704" y1="610" x2="1318" y2="924" />
+      </svg>
+
+      <!-- Athlete / Model Cutout (z-index 2) -->
+      <div class="athlete-wrapper">
+        <img class="athlete-img" id="hero-athlete" src="assets/hero_cutout.png?v=2" alt="OVRA — Авторский маникюр" />
+      </div>
+
+      <!-- Headline (h1, z-index 4) -->
+      <h1 class="hero-headline">
+        <div class="headline-line line-1" id="hero-line-1"></div>
+        <div class="headline-line line-2" id="hero-line-2"></div>
+      </h1>
+
+      <!-- Avatars -->
+      <div class="hero-avatars hidden-until-animated">
+        <div class="avatar crop-el" data-sheet="collage" data-cell="1452,1186,130,130" data-fx="0.5" data-fy="0.5" title="Хромированные бантики"></div>
+        <div class="avatar crop-el" data-sheet="collage" data-cell="1200,1146,135,135" data-fx="0.5" data-fy="0.5" title="Красные акценты"></div>
+        <div class="avatar crop-el" data-sheet="collage" data-cell="1690,1150,135,135" data-fx="0.5" data-fy="0.5" title="Черный мрамор"></div>
+      </div>
+
+      <!-- Body Copy -->
+      <div class="hero-copy hidden-until-animated">
+        Мягкие трикотажные слои и безупречный скульптурный маникюр, повторяющие каждое движение. Зимняя коллекция в кроваво-красных, черных и фарфоровых тонах согреет на пробежках и подчеркнет статус на вечерних встречах.
+      </div>
+
+      <!-- Floral & Lacquer Accent: Кустовые розы и флакон лака -->
+      <div class="hero-floral-accent hidden-until-animated" title="Кустовые и темно-красные розы с флаконом лака">
+        <img src="assets/nail_polish_roses.jpg" alt="Кустовые розы и лак" />
+        <div class="floral-caption">Кустовые розы &amp; Лак</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       SECTION 2: COLLAGE
+       ======================================================================== -->
+  <section class="section collage-section" id="collage">
+    <div class="panel collage-panel">
+      <div class="collage-frame">
+        <!-- Top-Right Paragraph (layer 4) -->
+        <p class="collage-p top-right hidden-until-animated">
+          Теплые руки, расслабленные плечи. Наш плотный трикотаж и стойкий гель-лак сохраняют безупречный вид и тепло без лишнего объема даже в самые холодные дни
+        </p>
+
+        <!-- Left Card (Кустовые розы и лак) -->
+        <div class="collage-card left-card hidden-until-animated" style="background: url('assets/nail_polish_roses.jpg') center/cover no-repeat;">
+          <div class="card-label">Кустовые розы и лак</div>
+        </div>
+
+        <!-- Outlined Word МАНИКЮР (layer 2) -->
+        <div class="outlined-word hidden-until-animated" id="collage-word">
+          МАНИКЮР
+        </div>
+
+        <!-- Centre Card (layer 3) -->
+        <div class="collage-card centre-card" id="collage-centre-card">
+          <div class="centre-empty-gradient"></div>
+          <div class="centre-photo-layer crop-el" id="centre-photo" data-sheet="collage" data-cell="29,28,982,982" data-fx="0.5" data-fy="0.2">
+            <div class="card-label">Черный френч с кристаллами</div>
+          </div>
+        </div>
+
+        <!-- Right Card (layer 1) -->
+        <div class="collage-card right-card crop-el hidden-until-animated" data-sheet="collage" data-cell="29,1036,982,982" data-fx="0.5" data-fy="0.45">
+          <div class="card-label">Готический аниме-корсет</div>
+        </div>
+
+        <!-- Bottom-Left Paragraph (layer 4) -->
+        <p class="collage-p bottom-left hidden-until-animated">
+          Нежный флис и ручная лепка для каждого образа — созданы для морозных утренних часов и теплых вечеров.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       SECTION 3: FRESH FITS MARQUEE
+       ======================================================================== -->
+  <section class="section marquee-section" id="marquee">
+    <div class="panel marquee-panel">
+      <!-- Centre Look Card (unobstructed clean view) -->
+      <div class="marquee-card" id="marquee-card">
+        <!-- 4 Cycling Looks -->
+        <div class="marquee-look active-look crop-el" id="look-0" data-sheet="marquee" data-cell="0,0,866,1159" data-fx="0.5" data-fy="1">
+          <div class="look-floating-badge">Образ 01 • Белый 3D цветок и вихри</div>
+        </div>
+        <div class="marquee-look crop-el" id="look-1" data-sheet="marquee" data-cell="878,0,866,1159" data-fx="0.5" data-fy="1">
+          <div class="look-floating-badge">Образ 02 • Ледяной хром и бантики</div>
+        </div>
+        <div class="marquee-look crop-el" id="look-2" data-sheet="marquee" data-cell="0,1172,866,1164" data-fx="0.5" data-fy="1">
+          <div class="look-floating-badge">Образ 03 • Черный мрамор и лепестки</div>
+        </div>
+        <div class="marquee-look crop-el" id="look-3" data-sheet="marquee" data-cell="878,1172,866,1164" data-fx="0.5" data-fy="1">
+          <div class="look-floating-badge">Образ 04 • Кроваво-красный лак и розы</div>
+        </div>
+
+        <!-- Translucent Arch -->
+        <div class="card-arch"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       JAVASCRIPT: RUSSIAN MOTION, CROPS, SMOOTH SCROLL & 3D WEBGL
+       ======================================================================== -->
+  <script>
+    (function() {
+      'use strict';
+
+      /* --- Stencil Cuts Table (Latin + Russian Cyrillic) --- */
+      const STENCIL_CUTS = {
+        // Latin
+        W: 'cut-v-50', O: 'cut-v-50', R: 'cut-v-29', K: 'cut-v-27', U: 'cut-v-50',
+        T: 'cut-h-21', F: 'cut-v-29', E: 'cut-v-29', S: 'cut-v-50', H: 'cut-v-29',
+        I: 'cut-h-52', Y: 'cut-h-50', N: 'cut-v-29', X: 'cut-h-50', C: 'cut-h-52', A: 'cut-h-62',
+        // Cyrillic
+        А: 'cut-h-62', Б: 'cut-v-29', В: 'cut-v-29', Г: 'cut-h-21', Д: 'cut-h-21',
+        Е: 'cut-v-29', Ё: 'cut-v-29', Ж: 'cut-v-50', З: 'cut-v-50', И: 'cut-h-52',
+        Й: 'cut-h-52', К: 'cut-v-27', Л: 'cut-v-50', М: 'cut-v-50', Н: 'cut-v-29',
+        О: 'cut-v-50', П: 'cut-v-50', Р: 'cut-v-29', С: 'cut-h-52', Т: 'cut-h-21',
+        У: 'cut-v-50', Ф: 'cut-v-50', Х: 'cut-h-50', Ц: 'cut-h-21', Ч: 'cut-v-29',
+        Ш: 'cut-v-50', Щ: 'cut-v-50', Ъ: 'cut-v-29', Ы: 'cut-v-29', Ь: 'cut-v-29',
+        Э: 'cut-h-52', Ю: 'cut-v-50', Я: 'cut-v-29'
+      };
+
+      function createCharSpan(char, isStencil = false) {
+        const span = document.createElement('span');
+        span.className = 'char-span';
+        span.textContent = char;
+        if (char === ' ') {
+          span.style.width = '0.3em';
+        }
+        if (isStencil && STENCIL_CUTS[char]) {
+          span.classList.add('stencil-letter', STENCIL_CUTS[char]);
+        }
+        return span;
+      }
+
+      function populateHeadline() {
+        const line1El = document.getElementById('hero-line-1');
+        const line2El = document.getElementById('hero-line-2');
+        if (!line1El || !line2El) return;
+
+        // Line 1: СТИЛЬ НА КАЖДЫЙ СЕЗОН
+        line1El.innerHTML = '';
+        const text1 = "СТИЛЬ НА КАЖДЫЙ СЕЗОН";
+        for (let i = 0; i < text1.length; i++) {
+          line1El.appendChild(createCharSpan(text1[i], false));
+        }
+
+        // Line 2: ДЛЯ МАНИКЮРА!
+        line2El.innerHTML = '';
+        const text2Pre = "ДЛЯ ";
+        for (let i = 0; i < text2Pre.length; i++) {
+          line2El.appendChild(createCharSpan(text2Pre[i], false));
+        }
+
+        const workoutWrap = document.createElement('span');
+        workoutWrap.className = 'workout-stencil';
+        const workoutText = "МАНИКЮРА!";
+        for (let i = 0; i < workoutText.length; i++) {
+          workoutWrap.appendChild(createCharSpan(workoutText[i], true));
+        }
+        line2El.appendChild(workoutWrap);
+      }
+
+      function populateMarquee() {
+        const row1El = document.getElementById('marquee-row-1');
+        const row2El = document.getElementById('marquee-row-2');
+        if (!row1El || !row2El) return;
+
+        row1El.innerHTML = '';
+        row2El.innerHTML = '';
+
+        const r1Phrase = "НОВЫЙ ОБРАЗ ДЛЯ";
+        const r2Phrase = "ТВОЕГО МАНИКЮРА";
+
+        for (let rep = 0; rep < 6; rep++) {
+          // Row 1
+          for (let i = 0; i < r1Phrase.length; i++) {
+            const ch = r1Phrase[i];
+            if (ch === ' ') {
+              const sp = document.createElement('span');
+              sp.className = 'spacer';
+              row1El.appendChild(sp);
+            } else {
+              row1El.appendChild(createCharSpan(ch, true));
+            }
+          }
+          const sp1 = document.createElement('span');
+          sp1.className = 'spacer';
+          row1El.appendChild(sp1);
+
+          // Row 2
+          for (let i = 0; i < r2Phrase.length; i++) {
+            const ch = r2Phrase[i];
+            if (ch === ' ') {
+              const sp = document.createElement('span');
+              sp.className = 'spacer';
+              row2El.appendChild(sp);
+            } else {
+              row2El.appendChild(createCharSpan(ch, true));
+            }
+          }
+          const sp2 = document.createElement('span');
+          sp2.className = 'spacer';
+          row2El.appendChild(sp2);
+        }
+      }
+
+      /* --- Scaling & Crop Logic --- */
+      let currentU = 1;
+      let currentUw = 1;
+      let isPhone = false;
+
+      function updateScaling() {
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+
+        if (vw < 821) {
+          isPhone = true;
+          currentU = vw / 390;
+          currentUw = currentU;
+        } else {
+          isPhone = false;
+          currentU = Math.min(vw / 1440, vh / 956);
+          currentUw = vw / 1440;
+        }
+
+        document.documentElement.style.setProperty('--u', `${currentU}px`);
+        document.documentElement.style.setProperty('--uw', `${currentUw}px`);
+
+        applyCrops();
+        fitOutlinedWord();
+      }
+
+      function applyCrops() {
+        const cropElements = document.querySelectorAll('.crop-el');
+        cropElements.forEach(el => {
+          const sheetName = el.dataset.sheet;
+          const coords = (el.dataset.cell || '').split(',').map(Number);
+          if (coords.length < 4) return;
+          const [cx, cy, cw, ch] = coords;
+          const fx = parseFloat(el.dataset.fx || '0.5');
+          const fy = parseFloat(el.dataset.fy || '0.5');
+
+          const sheetW = sheetName === 'collage' ? 2048 : 1744;
+          const sheetH = sheetName === 'collage' ? 2048 : 2336;
+          const sheetUrl = sheetName === 'collage' ? 'assets/collage_sheet.jpg' : 'assets/marquee_sheet.jpg';
+
+          const ew = el.offsetWidth;
+          const eh = el.offsetHeight;
+          if (!ew || !eh) return;
+
+          const s = Math.max(ew / cw, eh / ch);
+          const bgW = sheetW * s;
+          const bgH = sheetH * s;
+          const bgX = -(cx * s) - (cw * s - ew) * fx;
+          const bgY = -(cy * s) - (ch * s - eh) * fy;
+
+          el.style.backgroundImage = `url("${sheetUrl}")`;
+          el.style.backgroundSize = `${bgW}px ${bgH}px`;
+          el.style.backgroundPosition = `${bgX}px ${bgY}px`;
+          el.style.backgroundRepeat = 'no-repeat';
+        });
+      }
+
+      function fitOutlinedWord() {
+        const wordEl = document.getElementById('collage-word');
+        if (!wordEl) return;
+        wordEl.style.letterSpacing = '0px';
+
+        if (isPhone) {
+          const targetSpan = 370 * currentU;
+          const naturalW = wordEl.scrollWidth;
+          const spacing = Math.max(0, (targetSpan - naturalW) / 6);
+          wordEl.style.letterSpacing = `${spacing}px`;
+        } else {
+          const targetSpan = 1384 * currentU;
+          const naturalW = wordEl.scrollWidth;
+          const spacing = (targetSpan - naturalW) / 6;
+          wordEl.style.letterSpacing = `${spacing}px`;
+        }
+      }
+
+      /* --- Animation Helpers & Bezier Math --- */
+      function cubicBezier(p1x, p1y, p2x, p2y) {
+        return function(t) {
+          let x = t;
+          for (let i = 0; i < 5; i++) {
+            const currentX = 3 * (1 - x) * (1 - x) * x * p1x + 3 * (1 - x) * x * x * p2x + x * x * x;
+            const currentSlope = 3 * (1 - x) * (1 - x) * p1x + 6 * (1 - x) * x * (p2x - p1x) + 3 * x * x * (1 - p2x);
+            if (Math.abs(currentSlope) < 1e-5) break;
+            x -= (currentX - t) / currentSlope;
+          }
+          return 3 * (1 - x) * (1 - x) * x * p1y + 3 * (1 - x) * x * x * p2y + x * x * x;
+        };
+      }
+
+      const easeDefault = cubicBezier(0.25, 0.6, 0.3, 1.0);
+      const easeAthleteStrip = cubicBezier(0.3, 0.0, 0.2, 1.0);
+      const easeAthleteSlide = cubicBezier(0.3, 0.0, 0.15, 1.0);
+      const easeWipe = cubicBezier(0.3, 0.6, 0.4, 1.0);
+      const easeMarqueeLook = cubicBezier(0.3, 0.0, 0.3, 1.0);
+
+      function stripReveal(el, duration, pitch, phase, easeFn, onComplete) {
+        const startTime = performance.now();
+        function frame(now) {
+          const elapsed = now - startTime;
+          const p = Math.min(1, elapsed / duration);
+          const f = easeFn(p);
+          const a = Math.max(0.6, f * pitch);
+          const pos = phase % pitch;
+          const maskStr = `repeating-linear-gradient(180deg, black 0px, black ${a}px, transparent ${a}px, transparent ${pitch}px)`;
+          el.style.webkitMaskImage = maskStr;
+          el.style.maskImage = maskStr;
+          el.style.webkitMaskPosition = `0px ${pos}px`;
+          el.style.maskPosition = `0px ${pos}px`;
+
+          if (p < 1) {
+            requestAnimationFrame(frame);
+          } else {
+            el.style.webkitMaskImage = 'none';
+            el.style.maskImage = 'none';
+            if (onComplete) onComplete();
+          }
+        }
+        requestAnimationFrame(frame);
+      }
+
+      function letterWipe(spans, stepMs, onComplete) {
+        let finishedCount = 0;
+        const total = spans.length;
+        if (total === 0) {
+          if (onComplete) onComplete();
+          return;
+        }
+
+        spans.forEach((span, idx) => {
+          span.style.clipPath = 'inset(0 0 100% 0)';
+          span.style.webkitClipPath = 'inset(0 0 100% 0)';
+          span.style.opacity = '0.35';
+
+          setTimeout(() => {
+            const startT = performance.now();
+            const dur = 110;
+            function wipeTick(now) {
+              const el = now - startT;
+              const p = Math.min(1, el / dur);
+              const f = easeWipe(p);
+              const clipPct = 100 * (1 - f);
+              span.style.clipPath = `inset(0 0 ${clipPct}% 0)`;
+              span.style.webkitClipPath = `inset(0 0 ${clipPct}% 0)`;
+              span.style.opacity = `${0.35 + 0.65 * f}`;
+
+              if (p < 1) {
+                requestAnimationFrame(wipeTick);
+              } else {
+                span.style.clipPath = 'none';
+                span.style.webkitClipPath = 'none';
+                span.style.opacity = '1';
+                finishedCount++;
+                if (finishedCount === total && onComplete) {
+                  onComplete();
+                }
+              }
+            }
+            requestAnimationFrame(wipeTick);
+          }, idx * stepMs);
+        });
+      }
+
+      function fadeElement(el, duration, delay = 0, easeFn = easeDefault) {
+        if (!el) return;
+        setTimeout(() => {
+          el.style.transition = `opacity ${duration}ms cubic-bezier(0.25, 0.6, 0.3, 1)`;
+          el.style.opacity = '1';
+        }, delay);
+      }
+
+      /* --- Hero Motion Timeline --- */
+      let introPlayed = false;
+
+      function runHeroTimeline() {
+        if (introPlayed) return;
+        introPlayed = true;
+
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          document.querySelectorAll('.hidden-until-animated').forEach(el => el.style.opacity = '1');
+          return;
+        }
+
+        const athlete = document.getElementById('hero-athlete');
+        const pitch = isPhone ? 50 * currentU : 83 * currentU;
+        const phase = isPhone ? 90 * currentU : 98 * currentU;
+        const initialY = isPhone ? -150 * currentU : -236 * currentU;
+
+        // Set initial athlete position
+        athlete.style.transform = `translateY(${initialY}px)`;
+
+        // 0 ms: Both navs fade in (550 ms)
+        fadeElement(document.querySelector('.hero-nav-left'), 550, 0);
+        fadeElement(document.querySelector('.hero-nav-right'), 550, 0);
+
+        // 0 ms: Athlete strip reveal (650 ms)
+        stripReveal(athlete, 650, pitch, phase, easeAthleteStrip);
+
+        // 1020 ms: Athlete slides from initialY to 0 over 620 ms
+        setTimeout(() => {
+          const slideStart = performance.now();
+          const slideDur = 620;
+          function slideFrame(now) {
+            const elapsed = now - slideStart;
+            const p = Math.min(1, elapsed / slideDur);
+            const f = easeAthleteSlide(p);
+            const currentY = initialY * (1 - f);
+            athlete.style.transform = `translateY(${currentY}px)`;
+            if (p < 1) {
+              requestAnimationFrame(slideFrame);
+            } else {
+              athlete.style.transform = 'translateY(0px)';
+            }
+          }
+          requestAnimationFrame(slideFrame);
+        }, 1020);
+
+        // 1100 ms: Rays fade in
+        fadeElement(document.querySelector('.hero-rays'), 600, 1100);
+
+        // 1240 ms: Avatars and copy fade in
+        fadeElement(document.querySelector('.hero-avatars'), 350, 1240);
+        fadeElement(document.querySelector('.hero-copy'), 350, 1240);
+        fadeElement(document.querySelector('.hero-floral-accent'), 450, 1300);
+
+        // 1540 ms: Headline line 1 letter wipe (18ms step)
+        setTimeout(() => {
+          const line1Spans = Array.from(document.querySelectorAll('#hero-line-1 .char-span'));
+          letterWipe(line1Spans, 18);
+        }, 1540);
+
+        // 1570 ms: Headline line 2 letter wipe (40ms step)
+        setTimeout(() => {
+          const line2Spans = Array.from(document.querySelectorAll('#hero-line-2 .char-span'));
+          letterWipe(line2Spans, 40, () => {
+            // Backspace МАНИКЮРА! back to МАН and retype!
+            setTimeout(() => {
+              const workoutSpans = Array.from(document.querySelectorAll('#hero-line-2 .workout-stencil .char-span'));
+              // Keep first 3 chars (М, А, Н), toggle remaining (И, К, Ю, Р, А, !)
+              const toToggle = workoutSpans.slice(3).reverse();
+
+              toToggle.forEach((span, idx) => {
+                setTimeout(() => {
+                  span.style.visibility = 'hidden';
+                }, idx * 45);
+              });
+
+              const hideDuration = toToggle.length * 45;
+              setTimeout(() => {
+                const toShow = workoutSpans.slice(3);
+                toShow.forEach((span, idx) => {
+                  setTimeout(() => {
+                    span.style.visibility = 'visible';
+                  }, idx * 50);
+                });
+              }, hideDuration + 450);
+
+            }, 150);
+          });
+        }, 1570);
+      }
+
+      // Failsafe timer (6s)
+      setTimeout(() => {
+        if (!introPlayed) {
+          runHeroTimeline();
+          document.querySelectorAll('.hidden-until-animated').forEach(el => el.style.opacity = '1');
+        }
+      }, 6000);
+
+      /* --- Smooth Wheel Scrolling with Momentum --- */
+      let targetScrollY = window.scrollY;
+      let currentScrollY = window.scrollY;
+      let isScrollingAnim = false;
+
+      window.addEventListener('wheel', (e) => {
+        if (e.ctrlKey) return;
+        e.preventDefault();
+
+        const delta = e.deltaMode === 1 ? e.deltaY * 40 : (e.deltaMode === 2 ? e.deltaY * window.innerHeight : e.deltaY);
+        const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+        targetScrollY = Math.max(0, Math.min(maxScroll, targetScrollY + delta));
+
+        if (!isScrollingAnim) {
+          isScrollingAnim = true;
+          let lastTime = performance.now();
+
+          function stepScroll(now) {
+            const dt = Math.min(32, now - lastTime);
+            lastTime = now;
+            const factor = 1 - Math.pow(0.9, dt / 16.67);
+            currentScrollY += (targetScrollY - currentScrollY) * factor;
+            window.scrollTo(0, currentScrollY);
+
+            if (Math.abs(targetScrollY - currentScrollY) > 0.5) {
+              requestAnimationFrame(stepScroll);
+            } else {
+              window.scrollTo(0, targetScrollY);
+              currentScrollY = targetScrollY;
+              isScrollingAnim = false;
+            }
+          }
+          requestAnimationFrame(stepScroll);
+        }
+      }, { passive: false });
+
+      /* --- Collage Trigger on Scroll --- */
+      let collageTriggered = false;
+      function checkCollageTrigger() {
+        if (collageTriggered) return;
+        const collageSec = document.getElementById('collage');
+        if (!collageSec) return;
+        const rect = collageSec.getBoundingClientRect();
+        const vh = window.innerHeight;
+
+        if ((rect.top <= vh * 0.82 && rect.bottom >= vh * 0.3) || (rect.top >= 0 && rect.bottom <= vh)) {
+          collageTriggered = true;
+          const centrePhoto = document.getElementById('centre-photo');
+          centrePhoto.style.opacity = '1';
+          const pitch = 40 * currentU;
+          stripReveal(centrePhoto, 470, pitch, 0, cubicBezier(0.3, 0.0, 0.2, 1.0));
+
+          const elementsToFade = [
+            document.querySelector('.left-card'),
+            document.querySelector('.right-card'),
+            document.getElementById('collage-word'),
+            document.querySelector('.top-right'),
+            document.querySelector('.bottom-left')
+          ];
+
+          elementsToFade.forEach(el => {
+            if (el) {
+              el.style.transition = 'opacity 500ms cubic-bezier(0.45, 0.0, 0.35, 1.0)';
+              el.style.opacity = '1';
+            }
+          });
+        }
+      }
+
+      /* --- Marquee Trigger, Rows Drift, Cycling Looks --- */
+      let marqueeTriggered = false;
+      let driftOffset = 0;
+      let lastDriftTime = performance.now();
+      let activeLookIndex = 0;
+      let lookIntervalId = null;
+
+      function checkMarqueeTrigger() {
+        if (marqueeTriggered) return;
+        const marqueeSec = document.getElementById('marquee');
+        if (!marqueeSec) return;
+        const rect = marqueeSec.getBoundingClientRect();
+        const vh = window.innerHeight;
+
+        if ((rect.top <= vh * 0.85 && rect.bottom >= vh * 0.4) || (rect.top >= 0 && rect.bottom <= vh)) {
+          marqueeTriggered = true;
+          setTimeout(() => {
+            startCyclingLooks();
+          }, 300);
+        }
+      }
+
+      function updateMarqueeRows(now) {
+        const marqueeSec = document.getElementById('marquee');
+        const row1 = document.getElementById('marquee-row-1');
+        const row2 = document.getElementById('marquee-row-2');
+        if (!marqueeSec || !row1 || !row2) return;
+
+        const dt = now - lastDriftTime;
+        lastDriftTime = now;
+
+        if (marqueeTriggered) {
+          driftOffset += 0.05 * currentU * dt;
+        }
+
+        const rect = marqueeSec.getBoundingClientRect();
+        const d = -rect.top * 0.45 + driftOffset;
+        const w = (row1.scrollWidth || 2000) / 6;
+        const o = -6 * currentU;
+
+        const modD = ((d % w) + w) % w;
+        const trans1 = modD - w + o;
+        const trans2 = o - modD;
+
+        row1.style.transform = `translate3d(${trans1}px, 0, 0)`;
+        row2.style.transform = `translate3d(${trans2}px, 0, 0)`;
+      }
+
+      function startCyclingLooks() {
+        if (lookIntervalId) return;
+        lookIntervalId = setInterval(() => {
+          const nextIndex = (activeLookIndex + 1) % 4;
+          const currentLook = document.getElementById(`look-${activeLookIndex}`);
+          const nextLook = document.getElementById(`look-${nextIndex}`);
+
+          if (currentLook && nextLook) {
+            nextLook.style.zIndex = '3';
+            currentLook.style.zIndex = '2';
+            nextLook.style.opacity = '1';
+
+            stripReveal(nextLook, 200, 34 * currentU, 0, easeMarqueeLook, () => {
+              currentLook.style.opacity = '0';
+              currentLook.style.zIndex = '1';
+              nextLook.classList.add('active-look');
+              currentLook.classList.remove('active-look');
+            });
+          }
+          activeLookIndex = nextIndex;
+        }, 1270);
+      }
+
+      /* Global Animation Loop */
+      function masterLoop(now) {
+        checkCollageTrigger();
+        checkMarqueeTrigger();
+        updateMarqueeRows(now);
+        requestAnimationFrame(masterLoop);
+      }
+
+      /* ========================================================================
+         9. AMBIENT 3D ROSE PETALS LAYER (Vanilla WebGL)
+         ======================================================================== */
+      function initAmbientRosePetals() {
+        const canvas = document.getElementById('ambient-3d-canvas');
+        if (!canvas) return;
+        const gl = canvas.getContext('webgl', { alpha: true, antialias: true });
+        if (!gl) return;
+
+        function resizeCanvas() {
+          canvas.width = window.innerWidth;
+          canvas.height = window.innerHeight;
+          gl.viewport(0, 0, canvas.width, canvas.height);
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        const vsSource = `
+          attribute vec3 aPosition;
+          attribute vec3 aNormal;
+          attribute vec2 aUV;
+          attribute vec4 aInstancePos;
+          attribute vec4 aInstanceRot;
+
+          uniform mat4 uProjection;
+          uniform mat4 uView;
+          uniform float uTime;
+
+          varying vec3 vNormal;
+          varying vec2 vUV;
+          varying vec3 vWorldPos;
+          varying float vColorType;
+
+          mat3 rotationMatrix(vec3 r) {
+            float cx = cos(r.x), sx = sin(r.x);
+            float cy = cos(r.y), sy = sin(r.y);
+            float cz = cos(r.z), sz = sin(r.z);
+            return mat3(
+              cy*cz, -cy*sz, sy,
+              cx*sz + sx*sy*cz, cx*cz - sx*sy*sz, -sx*cy,
+              sx*sz - cx*sy*cz, sx*cz + cx*sy*sz, cx*cy
+            );
+          }
+
+          void main() {
+            vUV = aUV;
+            vColorType = aInstanceRot.w;
+
+            float flutter = sin(uTime * 3.0 + aInstancePos.x) * 0.15;
+            vec3 pos = aPosition;
+            pos.z += sin(pos.x * 2.0) * flutter;
+
+            mat3 rot = rotationMatrix(aInstanceRot.xyz);
+            vec3 transformed = rot * (pos * aInstancePos.w);
+            vec3 worldPos = transformed + aInstancePos.xyz;
+            vWorldPos = worldPos;
+            vNormal = rot * aNormal;
+
+            gl_Position = uProjection * uView * vec4(worldPos, 1.0);
+          }
+        `;
+
+        const fsSource = `
+          precision mediump float;
+          varying vec3 vNormal;
+          varying vec2 vUV;
+          varying vec3 vWorldPos;
+          varying float vColorType;
+
+          uniform vec3 uLightDir;
+
+          void main() {
+            vec3 norm = normalize(vNormal);
+            float diff = max(dot(norm, uLightDir), 0.35);
+
+            vec3 baseColor;
+            if (vColorType < 0.5) {
+              baseColor = mix(vec3(0.38, 0.01, 0.03), vec3(0.68, 0.05, 0.08), vUV.y);
+            } else if (vColorType < 1.5) {
+              baseColor = mix(vec3(0.96, 0.88, 0.90), vec3(0.92, 0.70, 0.78), vUV.y);
+            } else {
+              baseColor = mix(vec3(0.92, 0.90, 0.95), vec3(1.0, 0.98, 1.0), vUV.y);
+            }
+
+            float alpha = smoothstep(0.0, 0.2, vUV.x) * smoothstep(1.0, 0.8, vUV.x);
+            alpha *= smoothstep(0.0, 0.2, vUV.y) * smoothstep(1.0, 0.8, vUV.y);
+            alpha = clamp(alpha * 0.78, 0.0, 0.78);
+
+            vec3 color = baseColor * (diff * 0.85 + 0.25);
+            gl_FragColor = vec4(color, alpha);
+          }
+        `;
+
+        function compileShader(src, type) {
+          const shader = gl.createShader(type);
+          gl.shaderSource(shader, src);
+          gl.compileShader(shader);
+          return shader;
+        }
+
+        const program = gl.createProgram();
+        gl.attachShader(program, compileShader(vsSource, gl.VERTEX_SHADER));
+        gl.attachShader(program, compileShader(fsSource, gl.FRAGMENT_SHADER));
+        gl.linkProgram(program);
+        gl.useProgram(program);
+
+        const vertices = new Float32Array([
+          -0.6, -0.8, 0.0,   0, 0, 1,   0.0, 0.0,
+           0.6, -0.8, 0.0,   0, 0, 1,   1.0, 0.0,
+          -0.8,  0.4, 0.15,  0, 0.3, 0.9, 0.0, 0.7,
+           0.8,  0.4, 0.15,  0, 0.3, 0.9, 1.0, 0.7,
+           0.0,  1.0, 0.05,  0, 0.5, 0.8, 0.5, 1.0
+        ]);
+
+        const indices = new Uint16Array([
+          0, 1, 2,
+          1, 3, 2,
+          2, 3, 4
+        ]);
+
+        const vbo = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+        gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+
+        const ibo = gl.createBuffer();
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
+
+        const PETAL_COUNT = 32;
+        const petals = [];
+        for (let i = 0; i < PETAL_COUNT; i++) {
+          petals.push({
+            x: (Math.random() - 0.5) * 16,
+            y: (Math.random() - 0.5) * 14,
+            z: (Math.random() - 0.5) * 8 - 4,
+            vx: (Math.random() - 0.5) * 0.008 + 0.004,
+            vy: -Math.random() * 0.015 - 0.006,
+            vz: (Math.random() - 0.5) * 0.005,
+            rx: Math.random() * Math.PI * 2,
+            ry: Math.random() * Math.PI * 2,
+            rz: Math.random() * Math.PI * 2,
+            rvx: (Math.random() - 0.5) * 0.02,
+            rvy: (Math.random() - 0.5) * 0.02,
+            rvz: (Math.random() - 0.5) * 0.02,
+            scale: Math.random() * 0.25 + 0.22,
+            colorType: Math.random() < 0.55 ? 0 : (Math.random() < 0.75 ? 1 : 2)
+          });
+        }
+
+        let mouseX = 0, mouseY = 0;
+        window.addEventListener('mousemove', (e) => {
+          mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
+          mouseY = -(e.clientY / window.innerHeight - 0.5) * 2;
+        });
+
+        const uProj = gl.getUniformLocation(program, 'uProjection');
+        const uView = gl.getUniformLocation(program, 'uView');
+        const uTime = gl.getUniformLocation(program, 'uTime');
+        const uLightDir = gl.getUniformLocation(program, 'uLightDir');
+
+        gl.uniform3f(uLightDir, 0.4, 0.8, 0.5);
+
+        gl.enable(gl.BLEND);
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+        gl.disable(gl.DEPTH_TEST);
+
+        let startT = performance.now();
+
+        function renderPetals(now) {
+          const t = (now - startT) * 0.001;
+
+          const aspect = canvas.width / canvas.height;
+          const fov = 45 * Math.PI / 180;
+          const near = 0.1, far = 50.0;
+          const f = 1.0 / Math.tan(fov / 2);
+          const projMat = new Float32Array([
+            f / aspect, 0, 0, 0,
+            0, f, 0, 0,
+            0, 0, (far + near) / (near - far), -1,
+            0, 0, (2 * far * near) / (near - far), 0
+          ]);
+
+          const viewMat = new Float32Array([
+            1, 0, 0, 0,
+            0, 1, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 1
+          ]);
+
+          gl.uniformMatrix4fv(uProj, false, projMat);
+          gl.uniformMatrix4fv(uView, false, viewMat);
+          gl.uniform1f(uTime, t);
+
+          gl.clearColor(0, 0, 0, 0);
+          gl.clear(gl.COLOR_BUFFER_BIT);
+
+          gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+          const stride = 8 * 4;
+          const aPos = gl.getAttribLocation(program, 'aPosition');
+          const aNorm = gl.getAttribLocation(program, 'aNormal');
+          const aUV = gl.getAttribLocation(program, 'aUV');
+
+          gl.enableVertexAttribArray(aPos);
+          gl.vertexAttribPointer(aPos, 3, gl.FLOAT, false, stride, 0);
+          gl.enableVertexAttribArray(aNorm);
+          gl.vertexAttribPointer(aNorm, 3, gl.FLOAT, false, stride, 3 * 4);
+          gl.enableVertexAttribArray(aUV);
+          gl.vertexAttribPointer(aUV, 2, gl.FLOAT, false, stride, 6 * 4);
+
+          const aInstPos = gl.getAttribLocation(program, 'aInstancePos');
+          const aInstRot = gl.getAttribLocation(program, 'aInstanceRot');
+
+          for (let i = 0; i < PETAL_COUNT; i++) {
+            const p = petals[i];
+            p.x += p.vx + mouseX * 0.004;
+            p.y += p.vy;
+            p.z += p.vz;
+            p.rx += p.rvx;
+            p.ry += p.rvy;
+            p.rz += p.rvz;
+
+            if (p.y < -7) {
+              p.y = 8;
+              p.x = (Math.random() - 0.5) * 16;
+            }
+            if (p.x < -10) p.x = 10;
+            if (p.x > 10) p.x = -10;
+
+            gl.vertexAttrib4f(aInstPos, p.x, p.y, p.z, p.scale);
+            gl.vertexAttrib4f(aInstRot, p.rx, p.ry, p.rz, p.colorType);
+
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo);
+            gl.drawElements(gl.TRIANGLES, 9, gl.UNSIGNED_SHORT, 0);
+          }
+
+          requestAnimationFrame(renderPetals);
+        }
+        requestAnimationFrame(renderPetals);
+      }
+
+      /* --- 3D Card Hover Tilt --- */
+      function setup3DCardTilt() {
+        const cards = document.querySelectorAll('.collage-card, .marquee-card, .hero-video-card');
+        cards.forEach(card => {
+          card.addEventListener('mousemove', (e) => {
+            const rect = card.getBoundingClientRect();
+            const x = (e.clientX - rect.left) / rect.width - 0.5;
+            const y = (e.clientY - rect.top) / rect.height - 0.5;
+            const rotX = -y * 8;
+            const rotY = x * 8;
+            card.style.transform = `perspective(800px) rotateX(${rotX}deg) rotateY(${rotY}deg) scale3d(1.02, 1.02, 1.02)`;
+          });
+          card.addEventListener('mouseleave', () => {
+            card.style.transform = '';
+          });
+        });
+      }
+
+      /* --- Initialization --- */
+      window.addEventListener('DOMContentLoaded', () => {
+        populateHeadline();
+        populateMarquee();
+        updateScaling();
+        setup3DCardTilt();
+        initAmbientRosePetals();
+
+        // Theme Palette Switcher
+        const paletteButtons = document.querySelectorAll('.palette-btn');
+        paletteButtons.forEach(btn => {
+          btn.addEventListener('click', () => {
+            paletteButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const theme = btn.dataset.theme;
+            document.body.classList.remove('theme-black', 'theme-blood', 'theme-white');
+            if (theme !== 'tri-color') {
+              document.body.classList.add(`theme-${theme}`);
+            }
+          });
+        });
+
+        const heroAthlete = document.getElementById('hero-athlete');
+        let imgReady = false;
+        function onReady() {
+          if (imgReady) return;
+          imgReady = true;
+          document.fonts.ready.then(() => {
+            updateScaling();
+            runHeroTimeline();
+          });
+        }
+
+        if (heroAthlete.complete && heroAthlete.naturalWidth !== 0) {
+          onReady();
+        } else {
+          heroAthlete.addEventListener('load', onReady);
+          heroAthlete.addEventListener('error', onReady);
+          setTimeout(onReady, 4000);
+        }
+
+        requestAnimationFrame(masterLoop);
+      });
+
+      window.addEventListener('resize', updateScaling);
+
+    })();
+  </script>
+</body>
+</html>
